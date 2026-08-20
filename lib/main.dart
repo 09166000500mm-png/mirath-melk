@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
 void main() {
-  runApp(const MirathMelkApp());
+  runApp(const MirasMelkApp());
 }
 
-class MirathMelkApp extends StatelessWidget {
-  const MirathMelkApp({super.key});
+class MirasMelkApp extends StatelessWidget {
+  const MirasMelkApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -14,9 +14,11 @@ class MirathMelkApp extends StatelessWidget {
       title: 'میراث ملک',
       theme: ThemeData(
         useMaterial3: true,
-        fontFamily: 'Arial',
+        fontFamily: 'Vazirmatn',
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF0D47A1),
+        ),
       ),
-      locale: const Locale('fa'),
       home: const LoginPage(),
     );
   }
@@ -33,81 +35,97 @@ class _LoginPageState extends State<LoginPage> {
   final usernameController = TextEditingController();
   final passwordController = TextEditingController();
 
+  bool obscurePassword = true;
+
   @override
   Widget build(BuildContext context) {
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: Scaffold(
-        backgroundColor: const Color(0xFFF5F7FA),
-        body: Center(
+    return Scaffold(
+      body: SafeArea(
+        child: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24),
-            child: Card(
-              elevation: 4,
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.home_work_rounded,
-                      size: 70,
-                      color: Colors.blue,
-                    ),
-                    const SizedBox(height: 16),
-                    const Text(
-                      'میراث ملک',
-                      style: TextStyle(
-                        fontSize: 30,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'سیستم مدیریت هوشمند دپارتمان املاک',
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 30),
-                    TextField(
-                      controller: usernameController,
-                      decoration: const InputDecoration(
-                        labelText: 'نام کاربری',
-                        prefixIcon: Icon(Icons.person),
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    TextField(
-                      controller: passwordController,
-                      obscureText: true,
-                      decoration: const InputDecoration(
-                        labelText: 'رمز عبور',
-                        prefixIcon: Icon(Icons.lock),
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 52,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const DashboardPage(),
-                            ),
-                          );
-                        },
-                        child: const Text(
-                          'ورود به سیستم',
-                          style: TextStyle(fontSize: 17),
-                        ),
-                      ),
-                    ),
-                  ],
+            child: Column(
+              children: [
+                const Icon(
+                  Icons.business,
+                  size: 80,
+                  color: Color(0xFF0D47A1),
                 ),
-              ),
+
+                const SizedBox(height: 20),
+
+                const Text(
+                  'میراث ملک',
+                  style: TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+
+                const SizedBox(height: 8),
+
+                const Text(
+                  'سیستم مدیریت هوشمند دپارتمان املاک',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 16),
+                ),
+
+                const SizedBox(height: 40),
+
+                TextField(
+                  controller: usernameController,
+                  decoration: const InputDecoration(
+                    labelText: 'نام کاربری',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.person),
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                TextField(
+                  controller: passwordController,
+                  obscureText: obscurePassword,
+                  decoration: InputDecoration(
+                    labelText: 'رمز عبور',
+                    border: const OutlineInputBorder(),
+                    prefixIcon: const Icon(Icons.lock),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        obscurePassword
+                            ? Icons.visibility
+                            : Icons.visibility_off,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          obscurePassword = !obscurePassword;
+                        });
+                      },
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+
+                SizedBox(
+                  width: double.infinity,
+                  height: 55,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const DashboardPage(),
+                        ),
+                      );
+                    },
+                    child: const Text(
+                      'ورود به سامانه',
+                      style: TextStyle(fontSize: 18),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -121,74 +139,74 @@ class DashboardPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('میراث ملک'),
-        ),
-        body: GridView.count(
-          padding: const EdgeInsets.all(16),
-          crossAxisCount: 2,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-          children: const [
-            DashboardItem(
-              icon: Icons.home_work,
-              title: 'فایل‌های املاک',
-            ),
-            DashboardItem(
-              icon: Icons.people,
-              title: 'مشتریان',
-            ),
-            DashboardItem(
-              icon: Icons.calculate,
-              title: 'کمیسیون',
-            ),
-            DashboardItem(
-              icon: Icons.calendar_month,
-              title: 'تقویم',
-            ),
-            DashboardItem(
-              icon: Icons.analytics,
-              title: 'گزارشات',
-            ),
-            DashboardItem(
-              icon: Icons.settings,
-              title: 'تنظیمات',
-            ),
-          ],
-        ),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('میراث ملک'),
+        centerTitle: true,
+      ),
+      body: GridView.count(
+        padding: const EdgeInsets.all(16),
+        crossAxisCount: 2,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+        children: [
+          _menuItem(
+            context,
+            Icons.home_work,
+            'فایل‌های ملکی',
+          ),
+          _menuItem(
+            context,
+            Icons.people,
+            'مشتریان',
+          ),
+          _menuItem(
+            context,
+            Icons.add_business,
+            'ثبت فایل جدید',
+          ),
+          _menuItem(
+            context,
+            Icons.calculate,
+            'محاسبات',
+          ),
+          _menuItem(
+            context,
+            Icons.message,
+            'پیامک',
+          ),
+          _menuItem(
+            context,
+            Icons.settings,
+            'تنظیمات',
+          ),
+        ],
       ),
     );
   }
-}
 
-class DashboardItem extends StatelessWidget {
-  final IconData icon;
-  final String title;
-
-  const DashboardItem({
-    super.key,
-    required this.icon,
-    required this.title,
-  });
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _menuItem(
+    BuildContext context,
+    IconData icon,
+    String title,
+  ) {
     return Card(
+      elevation: 3,
       child: InkWell(
         onTap: () {},
-        borderRadius: BorderRadius.circular(12),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 48, color: Colors.blue),
+            Icon(
+              icon,
+              size: 45,
+              color: const Color(0xFF0D47A1),
+            ),
             const SizedBox(height: 12),
             Text(
               title,
               style: const TextStyle(
-                fontSize: 17,
+                fontSize: 16,
                 fontWeight: FontWeight.bold,
               ),
             ),
