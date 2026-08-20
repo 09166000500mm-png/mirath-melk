@@ -1,0 +1,36 @@
+name: Build Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Create Flutter project
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.35.0'
+          channel: stable
+          cache: true
+
+      - name: Create Flutter app
+        run: |
+          flutter create --org com.mirathmelk mirath_melk
+          cd mirath_melk
+
+      - name: Build APK
+        run: |
+          cd mirath_melk
+          flutter pub get
+          flutter build apk --release
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: mirath-melk-apk
+          path: mirath_melk/build/app/outputs/flutter-apk/app-release.apk
