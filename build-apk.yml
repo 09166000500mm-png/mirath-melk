@@ -15,10 +15,30 @@ jobs:
         with:
           flutter-version: '3.24.0'
 
-      - name: Fix Gradle
+      - name: Fix everything
         run: |
-          sed -i 's/mirath-melk/mirath_melk/g' pubspec.yaml
           rm -rf android
+          rm -rf .dart_tool
+          rm -rf pubspec.lock
+          echo "name: mirath_melk" > pubspec.yaml
+          echo "description: A Flutter project." >> pubspec.yaml
+          echo "publish_to: 'none'" >> pubspec.yaml
+          echo "version: 1.0.0+1" >> pubspec.yaml
+          echo "" >> pubspec.yaml
+          echo "environment:" >> pubspec.yaml
+          echo "  sdk: '>=3.5.0 <4.0.0'" >> pubspec.yaml
+          echo "" >> pubspec.yaml
+          echo "dependencies:" >> pubspec.yaml
+          echo "  flutter:" >> pubspec.yaml
+          echo "    sdk: flutter" >> pubspec.yaml
+          echo "" >> pubspec.yaml
+          echo "dev_dependencies:" >> pubspec.yaml
+          echo "  flutter_test:" >> pubspec.yaml
+          echo "    sdk: flutter" >> pubspec.yaml
+          echo "  flutter_lints: ^4.0.0" >> pubspec.yaml
+          echo "" >> pubspec.yaml
+          echo "flutter:" >> pubspec.yaml
+          echo "  uses-material-design: true" >> pubspec.yaml
           flutter create --platforms=android .
           flutter pub get
 
