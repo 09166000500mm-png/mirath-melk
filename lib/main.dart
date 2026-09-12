@@ -1,218 +1,81 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 
-void main() {
-  runApp(const MirasMelkApp());
+const navy = Color(0xFF101A2C);
+const gold = Color(0xFFD4AF37);
+
+void main() => runApp(const MirasMelkApp());
+
+class MirasMelkApp extends StatefulWidget {
+  const MirasMelkApp({super.key});
+  @override State<MirasMelkApp> createState() => _MirasMelkAppState();
+}
+class _MirasMelkAppState extends State<MirasMelkApp> {
+  bool dark = true;
+  @override Widget build(BuildContext context) => MaterialApp(
+    debugShowCheckedModeBanner: false,
+    title: 'میراث ملک',
+    theme: ThemeData(useMaterial3: true, colorScheme: ColorScheme.fromSeed(seedColor: gold, brightness: Brightness.light)),
+    darkTheme: ThemeData(useMaterial3: true, colorScheme: ColorScheme.fromSeed(seedColor: gold, brightness: Brightness.dark)),
+    themeMode: dark ? ThemeMode.dark : ThemeMode.light,
+    home: LoginPage(onTheme: (v) => setState(() => dark = v)),
+  );
 }
 
-class MirasMelkApp extends StatelessWidget {
-  const MirasMelkApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'میراث ملک',
-      theme: ThemeData(
-        useMaterial3: true,
-        fontFamily: 'Vazirmatn',
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF0D47A1),
-        ),
-      ),
-      home: const LoginPage(),
-    );
-  }
+class Store {
+  static Future<List<Map<String,dynamic>>> files() async { final p=await SharedPreferences.getInstance(); return (jsonDecode(p.getString('files')??'[]') as List).cast<Map<String,dynamic>>(); }
+  static Future<void> saveFiles(List<Map<String,dynamic>> x) async { final p=await SharedPreferences.getInstance(); await p.setString('files',jsonEncode(x)); }
+  static Future<List<String>> customers() async { final p=await SharedPreferences.getInstance(); return p.getStringList('customers')??[]; }
+  static Future<void> saveCustomers(List<String> x) async { final p=await SharedPreferences.getInstance(); await p.setStringList('customers',x); }
+  static Future<String> get(String k) async { final p=await SharedPreferences.getInstance(); return p.getString(k)??''; }
+  static Future<void> set(String k,String v) async { final p=await SharedPreferences.getInstance(); await p.setString(k,v); }
 }
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
-
-  @override
-  State<LoginPage> createState() => _LoginPageState();
+  final ValueChanged<bool> onTheme; const LoginPage({super.key,required this.onTheme});
+  @override State<LoginPage> createState()=>_LoginPageState();
+}
+class _LoginPageState extends State<LoginPage>{
+  final u=TextEditingController(),p=TextEditingController(); bool hide=true;
+  void login(){ if((u.text=='admin'&&p.text=='1234')||(u.text=='modir'&&p.text=='1234')) Navigator.pushReplacement(context,MaterialPageRoute(builder:(_)=>HomePage(onTheme:widget.onTheme))); else ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('نام کاربری یا رمز عبور اشتباه است'))); }
+  @override Widget build(BuildContext c)=>Directionality(textDirection:TextDirection.rtl,child:Scaffold(backgroundColor:navy,body:Center(child:SingleChildScrollView(padding:const EdgeInsets.all(24),child:Card(child:Padding(padding:const EdgeInsets.all(24),child:Column(children:[Container(width:90,height:90,decoration:BoxDecoration(color:gold,borderRadius:BorderRadius.circular(28)),child:const Icon(Icons.apartment,size:55,color:navy)),const SizedBox(height:15),const Text('میراث ملک',style:TextStyle(fontSize:32,fontWeight:FontWeight.w900)),const Text('سیستم مدیریت هوشمند دپارتمان املاک'),const SizedBox(height:28),TextField(controller:u,decoration:const InputDecoration(labelText:'نام کاربری',prefixIcon:Icon(Icons.person))),const SizedBox(height:12),TextField(controller:p,obscureText:hide,decoration:InputDecoration(labelText:'رمز عبور',prefixIcon:const Icon(Icons.lock),suffixIcon:IconButton(onPressed:()=>setState(()=>hide=!hide),icon:Icon(hide?Icons.visibility:Icons.visibility_off)))),const SizedBox(height:18),SizedBox(width:double.infinity,height:52,child:FilledButton(onPressed:login,child:const Text('ورود به سامانه'))),const SizedBox(height:10),const Text('مدیریت مهندس مجتبی صفری • مدیر فروش خانم طهماسبی پور',textAlign:TextAlign.center,style:TextStyle(fontSize:12))]))))));
 }
 
-class _LoginPageState extends State<LoginPage> {
-  final usernameController = TextEditingController();
-  final passwordController = TextEditingController();
-
-  bool obscurePassword = true;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              children: [
-                const Icon(
-                  Icons.business,
-                  size: 80,
-                  color: Color(0xFF0D47A1),
-                ),
-
-                const SizedBox(height: 20),
-
-                const Text(
-                  'میراث ملک',
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-
-                const SizedBox(height: 8),
-
-                const Text(
-                  'سیستم مدیریت هوشمند دپارتمان املاک',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 16),
-                ),
-
-                const SizedBox(height: 40),
-
-                TextField(
-                  controller: usernameController,
-                  decoration: const InputDecoration(
-                    labelText: 'نام کاربری',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.person),
-                  ),
-                ),
-
-                const SizedBox(height: 16),
-
-                TextField(
-                  controller: passwordController,
-                  obscureText: obscurePassword,
-                  decoration: InputDecoration(
-                    labelText: 'رمز عبور',
-                    border: const OutlineInputBorder(),
-                    prefixIcon: const Icon(Icons.lock),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        obscurePassword
-                            ? Icons.visibility
-                            : Icons.visibility_off,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          obscurePassword = !obscurePassword;
-                        });
-                      },
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 24),
-
-                SizedBox(
-                  width: double.infinity,
-                  height: 55,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const DashboardPage(),
-                        ),
-                      );
-                    },
-                    child: const Text(
-                      'ورود به سامانه',
-                      style: TextStyle(fontSize: 18),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+class HomePage extends StatefulWidget { final ValueChanged<bool> onTheme; const HomePage({super.key,required this.onTheme}); @override State<HomePage> createState()=>_HomePageState(); }
+class _HomePageState extends State<HomePage>{ int tab=0; List<Map<String,dynamic>> fs=[]; List<String> cs=[];
+  @override void initState(){super.initState();refresh();}
+  Future<void> refresh() async{fs=await Store.files();cs=await Store.customers();if(mounted)setState((){});}
+  @override Widget build(BuildContext c){ final pages=[Dashboard(fs:fs,cs:cs,onRefresh:refresh),FilesPage(files:fs,onRefresh:refresh),CustomersPage(customers:cs,onRefresh:refresh),MessagesPage(customers:cs),SettingsPage(onTheme:widget.onTheme)]; return Directionality(textDirection:TextDirection.rtl,child:Scaffold(appBar:AppBar(title:const Text('میراث ملک'),actions:[IconButton(onPressed:refresh,icon:const Icon(Icons.refresh))]),body:pages[tab],bottomNavigationBar:NavigationBar(selectedIndex:tab,onDestinationSelected:(i)=>setState(()=>tab=i),destinations:const[NavigationDestination(icon:Icon(Icons.dashboard),label:'خانه'),NavigationDestination(icon:Icon(Icons.home_work),label:'فایل‌ها'),NavigationDestination(icon:Icon(Icons.people),label:'مشتریان'),NavigationDestination(icon:Icon(Icons.message),label:'پیام'),NavigationDestination(icon:Icon(Icons.settings),label:'تنظیمات')])); }
 }
 
-class DashboardPage extends StatelessWidget {
-  const DashboardPage({super.key});
+class Dashboard extends StatelessWidget{final List<Map<String,dynamic>> fs;final List<String> cs;final VoidCallback onRefresh;const Dashboard({super.key,required this.fs,required this.cs,required this.onRefresh});@override Widget build(BuildContext c)=>ListView(padding:const EdgeInsets.all(16),children:[Container(padding:const EdgeInsets.all(20),decoration:BoxDecoration(color:navy,borderRadius:BorderRadius.circular(22)),child:const Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text('دپارتمان میراث ملک',style:TextStyle(color:gold,fontSize:28,fontWeight:FontWeight.w900)),SizedBox(height:6),Text('مدیریت مهندس مجتبی صفری',style:TextStyle(color:Colors.white,fontSize:16)),Text('مدیر فروش خانم طهماسبی پور',style:TextStyle(color:Colors.white70))])),const SizedBox(height:16),Row(children:[_stat('فایل ملکی',fs.length,Icons.home_work),_stat('مشتری',cs.length,Icons.people)]),const SizedBox(height:16),FilledButton.icon(onPressed:()=>Navigator.push(c,MaterialPageRoute(builder:(_)=>FileForm(onSaved:onRefresh))),icon:const Icon(Icons.add),label:const Text('ثبت فایل جدید')),const SizedBox(height:10),const Card(child:Padding(padding:EdgeInsets.all(15),child:Text('نکته دیوار: با لینک آگهی، اطلاعات عمومی آگهی وارد می‌شود. شماره خصوصی مالک فقط با دسترسی رسمی و رضایت خود کاربر دیوار قابل دریافت است؛ شماره را می‌توان دستی نیز ثبت کرد.')))]);
+Widget _stat(String t,int n,IconData i)=>Expanded(child:Card(child:Padding(padding:const EdgeInsets.all(16),child:Row(children:[Icon(i,color:gold),const SizedBox(width:10),Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text('$n',style:const TextStyle(fontSize:25,fontWeight:FontWeight.w900)),Text(t)])]))));}
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('میراث ملک'),
-        centerTitle: true,
-      ),
-      body: GridView.count(
-        padding: const EdgeInsets.all(16),
-        crossAxisCount: 2,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
-        children: [
-          _menuItem(
-            context,
-            Icons.home_work,
-            'فایل‌های ملکی',
-          ),
-          _menuItem(
-            context,
-            Icons.people,
-            'مشتریان',
-          ),
-          _menuItem(
-            context,
-            Icons.add_business,
-            'ثبت فایل جدید',
-          ),
-          _menuItem(
-            context,
-            Icons.calculate,
-            'محاسبات',
-          ),
-          _menuItem(
-            context,
-            Icons.message,
-            'پیامک',
-          ),
-          _menuItem(
-            context,
-            Icons.settings,
-            'تنظیمات',
-          ),
-        ],
-      ),
-    );
-  }
+class FilesPage extends StatefulWidget{final List<Map<String,dynamic>> files;final VoidCallback onRefresh;const FilesPage({super.key,required this.files,required this.onRefresh});@override State<FilesPage> createState()=>_FilesPageState();}
+class _FilesPageState extends State<FilesPage>{String q='';@override Widget build(BuildContext c){final list=widget.files.where((x)=>('${x['title']} ${x['code']} ${x['address']} ${x['ownerPhone']}'.toLowerCase()).contains(q.toLowerCase())).toList();return Column(children:[Padding(padding:const EdgeInsets.all(12),child:TextField(onChanged:(v)=>setState(()=>q=v),decoration:const InputDecoration(prefixIcon:Icon(Icons.search),labelText:'جستجوی فایل'))),Expanded(child:list.isEmpty?const Center(child:Text('هنوز فایلی ثبت نشده')):ListView.builder(itemCount:list.length,itemBuilder:(c,i){final x=list[i];return Card(margin:const EdgeInsets.symmetric(horizontal:12,vertical:6),child:ListTile(title:Text(x['title']??'ملک',style:const TextStyle(fontWeight:FontWeight.bold)),subtitle:Text('کد ${x['code']} • ${x['type']} • ${x['price']}\nمالک: ${x['ownerName']} • ${x['ownerPhone']}'),isThreeLine:true,trailing:const Icon(Icons.chevron_left),onTap:()=>Navigator.push(c,MaterialPageRoute(builder:(_)=>FileDetails(file:x,onRefresh:widget.onRefresh))));}))]),]);}}
 
-  Widget _menuItem(
-    BuildContext context,
-    IconData icon,
-    String title,
-  ) {
-    return Card(
-      elevation: 3,
-      child: InkWell(
-        onTap: () {},
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
-              size: 45,
-              color: const Color(0xFF0D47A1),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+class FileDetails extends StatelessWidget{final Map<String,dynamic> file;final VoidCallback onRefresh;const FileDetails({super.key,required this.file,required this.onRefresh});@override Widget build(BuildContext c)=>Scaffold(appBar:AppBar(title:Text(file['title']??'جزئیات فایل')),body:ListView(padding:const EdgeInsets.all(16),children:[_line('کد',file['code']),_line('نوع ملک',file['type']),_line('نوع معامله',file['deal']),_line('متراژ',file['area']),_line('قیمت',file['price']),_line('آدرس',file['address']),_line('مالک',file['ownerName']),_line('شماره مالک',file['ownerPhone']),_line('توضیحات',file['description']),if((file['divarLink']??'').toString().isNotEmpty)FilledButton.icon(onPressed:()=>launchUrl(Uri.parse(file['divarLink'])),icon:const Icon(Icons.open_in_new),label:const Text('باز کردن آگهی دیوار')),if((file['ownerPhone']??'').toString().isNotEmpty)OutlinedButton.icon(onPressed:()=>launchUrl(Uri(scheme:'tel',path:file['ownerPhone'])),icon:const Icon(Icons.call),label:const Text('تماس با مالک')),FilledButton(onPressed:()=>Navigator.push(c,MaterialPageRoute(builder:(_)=>FileForm(existing:file,onSaved:onRefresh))),child:const Text('ویرایش فایل'))]));}
+Widget _line(String a,d)=>Card(child:Padding(padding:const EdgeInsets.all(12),child:Text('$a: ${d??''}',style:const TextStyle(fontSize:15))));}
+
+class FileForm extends StatefulWidget{final Map<String,dynamic>? existing;final VoidCallback onSaved;const FileForm({super.key,this.existing,required this.onSaved});@override State<FileForm> createState()=>_FileFormState();}
+class _FileFormState extends State<FileForm>{late TextEditingController title,type,deal,area,price,address,owner,phone,desc,link,divarKey,accessToken;bool loading=false;String msg='';
+ @override void initState(){super.initState();final x=widget.existing??{};title=TextEditingController(text:x['title']??'');type=TextEditingController(text:x['type']??'آپارتمان');deal=TextEditingController(text:x['deal']??'فروش');area=TextEditingController(text:x['area']??'');price=TextEditingController(text:x['price']??'');address=TextEditingController(text:x['address']??'');owner=TextEditingController(text:x['ownerName']??'');phone=TextEditingController(text:x['ownerPhone']??'');desc=TextEditingController(text:x['description']??'');link=TextEditingController(text:x['divarLink']??'');divarKey=TextEditingController();accessToken=TextEditingController();}
+ Future<void> importDivar() async{final m=RegExp(r'(?:divar\.ir/v/|divar\.ir/[^/]+/[^/]+/)([A-Za-z0-9_-]{6,20})').firstMatch(link.text);if(m==null){setState(()=>msg='لینک دیوار معتبر نیست');return;}final token=m.group(1)!;if(divarKey.text.trim().isEmpty){setState(()=>msg='برای وارد کردن خودکار مشخصات، API Key رسمی دیوار را وارد کنید.');return;}setState(()=>loading=true);try{final r=await http.get(Uri.parse('https://open-api.divar.ir/v1/open-platform/finder/post/$token'),headers:{'x-api-key':divarKey.text.trim()});final j=jsonDecode(r.body);if(r.statusCode<200||r.statusCode>=300)throw Exception(j['message']??'خطای دیوار');final d=(j['data']??{}) as Map<String,dynamic>;String pick(List<String> keys){for(final k in keys){if(d[k]!=null)return '${d[k]}';}return '';}setState((){title.text=pick(['title','prefilled_title']);area.text=pick(['size','area']);price.text=d['price'] is Map?'${(d['price'] as Map)['value']??''}':pick(['price']);address.text=j['address']?.toString()??j['district']?.toString()??address.text;desc.text=pick(['description']);link.text=link.text;msg='مشخصات عمومی آگهی با موفقیت وارد شد. شماره مالک خصوصی در API عمومی دیوار وجود ندارد.';});}catch(e){setState(()=>msg='خطا در دریافت آگهی: $e');}finally{setState(()=>loading=false);}}
+ Future<void> getOwnerPhone(){return showDialog(context:context,builder:(_)=>AlertDialog(title:const Text('دریافت شماره مالک از دیوار'),content:const Text('این بخش فقط وقتی شماره را برمی‌گرداند که صاحب حساب دیوار به برنامه شما اجازه رسمی USER_PHONE داده باشد. برای آگهی شخص دیگری بدون رضایت او قابل دور زدن نیست.'),actions:[TextButton(onPressed:()=>Navigator.pop(context),child:const Text('متوجه شدم'))]));}
+ Future<void> save() async{final p=await Store.files();final x={'code':widget.existing?['code']??'MM-${DateTime.now().millisecondsSinceEpoch.toString().substring(6)}':'MM-${DateTime.now().millisecondsSinceEpoch.toString().substring(6)}','title':title.text,'type':type.text,'deal':deal.text,'area':area.text,'price':price.text,'address':address.text,'ownerName':owner.text,'ownerPhone':phone.text,'description':desc.text,'divarLink':link.text,'updated':DateFormat('yyyy/MM/dd HH:mm').format(DateTime.now())};final i=p.indexWhere((z)=>z['code']==x['code']);if(i>=0)p[i]=x;else p.add(x);await Store.saveFiles(p);if(phone.text.trim().isNotEmpty){final cs=await Store.customers();if(!cs.contains(phone.text.trim())){cs.add(phone.text.trim());await Store.saveCustomers(cs);}}widget.onSaved();if(mounted)Navigator.pop(context);}
+ @override Widget build(BuildContext c)=>Scaffold(appBar:AppBar(title:Text(widget.existing==null?'ثبت فایل جدید':'ویرایش فایل')),body:ListView(padding:const EdgeInsets.all(16),children:[_f(title,'عنوان فایل'),_f(type,'نوع ملک'),_f(deal,'نوع معامله'),_f(area,'متراژ'),_f(price,'قیمت'),_f(address,'آدرس'),_f(owner,'نام مالک'),_f(phone,'شماره مالک',keyboard:TextInputType.phone),_f(link,'لینک آگهی دیوار'),Card(child:Padding(padding:const EdgeInsets.all(12),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[const Text('اتصال رسمی دیوار',style:TextStyle(fontWeight:FontWeight.bold)),const SizedBox(height:8),TextField(controller:divarKey,obscureText:true,decoration:const InputDecoration(labelText:'API Key دیوار')),const SizedBox(height:8),TextField(controller:accessToken,obscureText:true,decoration:const InputDecoration(labelText:'Access Token رسمی (برای دسترسی مجاز)')),const SizedBox(height:8),Row(children:[Expanded(child:FilledButton.icon(onPressed:loading?null:importDivar,icon:const Icon(Icons.download),label:Text(loading?'در حال دریافت...':'وارد کردن مشخصات از دیوار'))),const SizedBox(width:8),IconButton(onPressed:getOwnerPhone,icon:const Icon(Icons.phone))]),if(msg.isNotEmpty)Padding(padding:const EdgeInsets.only(top:8),child:Text(msg))]))),_f(desc,'توضیحات',multi:true),const SizedBox(height:8),FilledButton.icon(onPressed:save,icon:const Icon(Icons.save),label:const Text('ثبت و ذخیره فایل'))]));
+ Widget _f(TextEditingController x,String l,{bool multi=false,TextInputType? keyboard})=>Padding(padding:const EdgeInsets.only(bottom:10),child:TextField(controller:x,maxLines:multi?5:1,keyboardType:keyboard,decoration:InputDecoration(labelText:l,border:const OutlineInputBorder())));
 }
+
+class CustomersPage extends StatefulWidget{final List<String> customers;final VoidCallback onRefresh;const CustomersPage({super.key,required this.customers,required this.onRefresh});@override State<CustomersPage> createState()=>_CustomersPageState();}
+class _CustomersPageState extends State<CustomersPage>{final c=TextEditingController();@override Widget build(BuildContext x)=>Column(children:[Padding(padding:const EdgeInsets.all(12),child:Row(children:[Expanded(child:TextField(controller:c,keyboardType:TextInputType.phone,decoration:const InputDecoration(labelText:'شماره مشتری'))),IconButton(onPressed:()async{if(c.text.trim().isEmpty)return;final a=await Store.customers();if(!a.contains(c.text.trim())){a.add(c.text.trim());await Store.saveCustomers(a);c.clear();widget.onRefresh();setState((){});}},icon:const Icon(Icons.add_circle))])),Expanded(child:ListView(children:widget.customers.map((n)=>ListTile(leading:const Icon(Icons.phone),title:Text(n),trailing:Wrap(children:[IconButton(onPressed:()=>launchUrl(Uri(scheme:'tel',path:n)),icon:const Icon(Icons.call)),IconButton(onPressed:()=>launchUrl(Uri(scheme:'sms',path:n,queryParameters:{'body':'سلام، از دپارتمان میراث ملک تماس می‌گیریم.'})),icon:const Icon(Icons.sms))])).toList()))]);}
+
+class MessagesPage extends StatelessWidget{final List<String> customers;const MessagesPage({super.key,required this.customers});@override Widget build(BuildContext c)=>ListView(padding:const EdgeInsets.all(16),children:[const Text('ارسال پیام به مشتریان',style:TextStyle(fontSize:22,fontWeight:FontWeight.w900)),const SizedBox(height:12),...customers.map((n)=>Card(child:ListTile(title:Text(n),subtitle:const Text('سلام، از دپارتمان میراث ملک پیام می‌دهیم.'),trailing:IconButton(onPressed:()=>launchUrl(Uri(scheme:'sms',path:n,queryParameters:{'body':'سلام، از دپارتمان میراث ملک پیام می‌دهیم.'})),icon:const Icon(Icons.send))))),const SizedBox(height:20),const Card(child:Padding(padding:EdgeInsets.all(14),child:Text('گفت‌وگوی آنلاین مشاورین برای نسخه ابری نیازمند حساب مشترک و احراز هویت سرور است؛ این نسخه پیامک و لینک ارتباط را آماده می‌کند.')))]);}
+
+class SettingsPage extends StatefulWidget{final ValueChanged<bool> onTheme;const SettingsPage({super.key,required this.onTheme});@override State<SettingsPage> createState()=>_SettingsPageState();}
+class _SettingsPageState extends State<SettingsPage>{bool dark=true;final pass=TextEditingController();@override Widget build(BuildContext c)=>ListView(padding:const EdgeInsets.all(16),children:[SwitchListTile(title:const Text('حالت تیره'),value:dark,onChanged:(v){setState(()=>dark=v);widget.onTheme(v);}),const Divider(),const ListTile(title:Text('مدیریت'),subtitle:Text('مدیریت مهندس مجتبی صفری • مدیر فروش خانم طهماسبی پور')),TextField(controller:pass,obscureText:true,decoration:const InputDecoration(labelText:'رمز جدید مدیر')),FilledButton(onPressed:()async{if(pass.text.length<4)return;await Store.set('admin_password',pass.text);pass.clear();if(c.mounted)ScaffoldMessenger.of(c).showSnackBar(const SnackBar(content:Text('رمز ذخیره شد')));},child:const Text('تغییر رمز')),const SizedBox(height:16),const Card(child:Padding(padding:EdgeInsets.all(14),child:Text('اتصال دیوار از API رسمی انجام می‌شود. اطلاعات عمومی آگهی با GET_POST قابل دریافت است. اطلاعات خصوصی مثل شماره تلفن فقط با مجوز OAuth و رضایت کاربر قابل دریافت است.')))]);}
