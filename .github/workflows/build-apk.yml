@@ -1,12 +1,10 @@
-name: Build Mirath Melk Android + Web
-
+name: Build Mirath Melk APK
 on:
   push:
     branches: [ main ]
   workflow_dispatch:
-
 jobs:
-  build-android:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -14,32 +12,12 @@ jobs:
         with:
           flutter-version: '3.35.2'
           channel: stable
-      - name: Ensure Android platform
-        run: |
-          if [ ! -d android ]; then flutter create --platforms=android .; fi
+      - name: Ensure Android
+        run: flutter create --platforms=android .
       - run: flutter pub get
       - run: flutter build apk --release
       - uses: actions/upload-artifact@v4
         with:
-          name: mirath-melk-android
+          name: mirath-melk-complete-apk
           path: build/app/outputs/flutter-apk/app-release.apk
-          retention-days: 30
-
-  build-web:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.35.2'
-          channel: stable
-      - name: Ensure Web platform
-        run: |
-          if [ ! -d web ]; then flutter create --platforms=web .; fi
-      - run: flutter pub get
-      - run: flutter build web --release
-      - uses: actions/upload-artifact@v4
-        with:
-          name: mirath-melk-web
-          path: build/web
           retention-days: 30
