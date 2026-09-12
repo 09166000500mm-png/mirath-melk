@@ -1,50 +1,45 @@
-name: Build APK
+name: Build Mirath Melk Android + Web
 
 on:
   push:
     branches: [ main ]
+  workflow_dispatch:
 
 jobs:
-  build:
+  build-android:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
-
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.24.0'
-
-      - name: Fix everything
+          flutter-version: '3.35.2'
+          channel: stable
+      - name: Ensure Android platform exists
         run: |
-          rm -rf android
-          rm -rf .dart_tool
-          rm -rf pubspec.lock
-          echo "name: mirath_melk" > pubspec.yaml
-          echo "description: A Flutter project." >> pubspec.yaml
-          echo "publish_to: 'none'" >> pubspec.yaml
-          echo "version: 1.0.0+1" >> pubspec.yaml
-          echo "" >> pubspec.yaml
-          echo "environment:" >> pubspec.yaml
-          echo "  sdk: '>=3.5.0 <4.0.0'" >> pubspec.yaml
-          echo "" >> pubspec.yaml
-          echo "dependencies:" >> pubspec.yaml
-          echo "  flutter:" >> pubspec.yaml
-          echo "    sdk: flutter" >> pubspec.yaml
-          echo "" >> pubspec.yaml
-          echo "dev_dependencies:" >> pubspec.yaml
-          echo "  flutter_test:" >> pubspec.yaml
-          echo "    sdk: flutter" >> pubspec.yaml
-          echo "  flutter_lints: ^4.0.0" >> pubspec.yaml
-          echo "" >> pubspec.yaml
-          echo "flutter:" >> pubspec.yaml
-          echo "  uses-material-design: true" >> pubspec.yaml
-          flutter create --platforms=android .
-          flutter pub get
-
+          if [ ! -d android ]; then flutter create --platforms=android .; fi
+      - run: flutter pub get
       - run: flutter build apk --release
-
       - uses: actions/upload-artifact@v4
         with:
-          name: app-release
+          name: mirath-melk-android
           path: build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 30
+
+  build-web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.35.2'
+          channel: stable
+      - name: Ensure Web platform exists
+        run: |
+          if [ ! -d web ]; then flutter create --platforms=web .; fi
+      - run: flutter pub get
+      - run: flutter build web --release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mirath-melk-web
+          path: build/web
+          retention-days: 30
